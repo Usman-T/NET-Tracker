@@ -1,952 +1,198 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NET Master Tracker | Physics & Mathematics</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        darkbg: '#080c14',
-                        darkcard: '#0f172a',
-                        darkborder: '#1e293b',
-                        physicsAccent: '#6366f1',
-                        mathsAccent: '#10b981'
-                    },
-                    keyframes: {
-                        popCheck: {
-                            '0%': { transform: 'scale(0.8) rotate(-10deg)' },
-                            '50%': { transform: 'scale(1.25) rotate(5deg)' },
-                            '100%': { transform: 'scale(1) rotate(0deg)' }
-                        },
-                        ripple: {
-                            '0%': { transform: 'scale(0)', opacity: '0.6' },
-                            '100%': { transform: 'scale(2.5)', opacity: '0' }
-                        }
-                    },
-                    animation: {
-                        'pop-check': 'popCheck 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'ripple': 'ripple 0.5s ease-out forwards'
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #080c14; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
-
-        /* Custom satisfying checkmark box styling */
-        .check-box-btn {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .check-box-btn.is-checked {
-            background-color: #10b981;
-            border-color: #10b981;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-        }
-    </style>
-</head>
-<body class="bg-darkbg text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
-
-    <!-- Top Header Navigation -->
-    <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-gradient-to-tr from-indigo-600 to-emerald-500 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 text-white">
-                    <i class="fa-solid fa-graduation-cap text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">NET Entry Test Prep</h1>
-                    <p class="text-xs text-slate-400 font-medium hidden sm:block">Sir Bilal Zia (Physics) • Sir Hashim (Maths)</p>
-                </div>
-            </div>
-
-            <!-- Utility Action Buttons -->
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <button onclick="exportData()" title="Export JSON Data Backup" class="px-3 py-2 text-xs sm:text-sm bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition flex items-center space-x-2 border border-slate-700">
-                    <i class="fa-solid fa-download text-indigo-400"></i>
-                    <span class="hidden sm:inline">Export</span>
-                </button>
-                <label title="Import Backup JSON" class="px-3 py-2 text-xs sm:text-sm bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition flex items-center space-x-2 border border-slate-700 cursor-pointer">
-                    <i class="fa-solid fa-upload text-emerald-400"></i>
-                    <span class="hidden sm:inline">Import</span>
-                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
-                </label>
-                <button onclick="resetAllData()" title="Reset Tracker" class="px-3 py-2 text-xs sm:text-sm bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-xl font-medium transition border border-rose-900/50">
-                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Reset
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- Navigation Tabs -->
-        <nav class="flex p-1.5 bg-slate-900/90 border border-slate-800/80 rounded-2xl shadow-xl max-w-2xl mx-auto">
-            <button id="tab-overview" onclick="switchTab('overview')" class="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-white bg-indigo-600 shadow-md">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Overall Dashboard</span>
-            </button>
-            <button id="tab-physics" onclick="switchTab('physics')" class="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-atom text-indigo-400"></i>
-                <span>Physics</span>
-            </button>
-            <button id="tab-maths" onclick="switchTab('maths')" class="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-calculator text-emerald-400"></i>
-                <span>Maths</span>
-            </button>
-        </nav>
-
-        <!-- Overview Dashboard View -->
-        <section id="view-overview" class="space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <!-- Combined Progress -->
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Combined Progress</span>
-                        <div class="p-2 bg-sky-500/10 text-sky-400 rounded-xl"><i class="fa-solid fa-chart-line text-lg"></i></div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="ov-total-percent" class="text-3xl font-black text-white">0%</span>
-                        <span id="ov-total-counts" class="text-xs text-slate-400 font-medium">0 / 0 lectures</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-2.5 rounded-full mt-4 overflow-hidden">
-                        <div id="ov-total-bar" class="bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Physics Progress -->
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl relative overflow-hidden cursor-pointer hover:border-indigo-500/50 transition group" onclick="switchTab('physics')">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Physics Syllabus</span>
-                            <p class="text-xs text-slate-400">Sir Bilal Zia</p>
-                        </div>
-                        <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl group-hover:scale-110 transition"><i class="fa-solid fa-atom text-lg"></i></div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="ov-physics-percent" class="text-3xl font-black text-white">0%</span>
-                        <span id="ov-physics-counts" class="text-xs text-slate-400">0 / 0</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-2.5 rounded-full mt-4 overflow-hidden">
-                        <div id="ov-physics-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Maths Progress -->
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl relative overflow-hidden cursor-pointer hover:border-emerald-500/50 transition group" onclick="switchTab('maths')">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Maths Syllabus</span>
-                            <p class="text-xs text-slate-400">Sir Hashim</p>
-                        </div>
-                        <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-110 transition"><i class="fa-solid fa-calculator text-lg"></i></div>
-                    </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="ov-maths-percent" class="text-3xl font-black text-white">0%</span>
-                        <span id="ov-maths-counts" class="text-xs text-slate-400">0 / 0</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-2.5 rounded-full mt-4 overflow-hidden">
-                        <div id="ov-maths-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chapter Breakdowns -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-6 shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h3 class="font-bold text-base text-white flex items-center space-x-2">
-                            <i class="fa-solid fa-atom text-indigo-400"></i>
-                            <span>Physics Chapters</span>
-                        </h3>
-                        <button onclick="switchTab('physics')" class="text-xs text-indigo-400 font-semibold hover:underline">View All →</button>
-                    </div>
-                    <div id="overview-physics-list" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
-                </div>
-
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-6 shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h3 class="font-bold text-base text-white flex items-center space-x-2">
-                            <i class="fa-solid fa-calculator text-emerald-400"></i>
-                            <span>Mathematics Chapters</span>
-                        </h3>
-                        <button onclick="switchTab('maths')" class="text-xs text-emerald-400 font-semibold hover:underline">View All →</button>
-                    </div>
-                    <div id="overview-maths-list" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Subject Detail View -->
-        <section id="view-subject" class="hidden space-y-6">
-            <!-- Subject Header Banner -->
-            <div id="subject-banner" class="bg-gradient-to-r from-indigo-950/80 via-darkcard to-slate-900 border border-darkborder rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <span id="subject-badge" class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full">PHYSICS</span>
-                    <h2 id="subject-title" class="text-2xl font-black text-white mt-2">Physics Tracker</h2>
-                    <p id="subject-teacher" class="text-xs text-slate-400 font-medium mt-0.5">Teacher: Sir Bilal Zia</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-3">
-                    <button onclick="openAddChapterModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center space-x-2">
-                        <i class="fa-solid fa-folder-plus text-indigo-400"></i>
-                        <span>Custom Chapter</span>
-                    </button>
-                    <button onclick="openAddLectureModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-lg shadow-indigo-500/20">
-                        <i class="fa-solid fa-plus text-sm"></i>
-                        <span>Add Lecture</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Controls & Search -->
-            <div class="bg-darkcard border border-darkborder rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="relative flex-1">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    </span>
-                    <input type="text" id="searchInput" oninput="renderSubjectView()" placeholder="Search chapter or lecture name..." class="w-full pl-9 pr-4 py-2 bg-darkbg border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
-                </div>
-
-                <div class="flex items-center space-x-3">
-                    <select id="statusFilter" onchange="renderSubjectView()" class="bg-darkbg border border-slate-800 text-slate-300 text-xs sm:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 transition">
-                        <option value="all">All Statuses</option>
-                        <option value="Complete">Complete</option>
-                        <option value="Pending">Pending</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Chapters Accordion -->
-            <div id="subject-chapters-container" class="space-y-6"></div>
-        </section>
-
-    </main>
-
-    <!-- Notes Modal -->
-    <div id="noteModal" class="fixed inset-0 z-50 bg-darkbg/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-darkcard border border-darkborder rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div>
-                    <h3 id="modal-lecture-title" class="font-bold text-lg text-white">Lecture Details</h3>
-                    <p id="modal-chapter-info" class="text-xs text-indigo-400 mt-0.5">Chapter Info</p>
-                </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Difficulty Rating</label>
-                    <div class="grid grid-cols-3 gap-2" id="difficulty-selector">
-                        <button onclick="setDifficulty('Easy')" id="diff-Easy" class="py-2 text-xs font-medium rounded-xl border border-slate-800 bg-darkbg text-slate-400 hover:border-emerald-500 transition">Easy</button>
-                        <button onclick="setDifficulty('Medium')" id="diff-Medium" class="py-2 text-xs font-medium rounded-xl border border-slate-800 bg-darkbg text-slate-400 hover:border-amber-500 transition">Medium</button>
-                        <button onclick="setDifficulty('Hard')" id="diff-Hard" class="py-2 text-xs font-medium rounded-xl border border-slate-800 bg-darkbg text-slate-400 hover:border-rose-500 transition">Hard</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="modal-notes-input" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Personal Revision Notes & Formulas</label>
-                    <textarea id="modal-notes-input" rows="4" placeholder="Write key formulas, important concepts, or questions..." class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition"></textarea>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
-                <button onclick="closeModal()" class="px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">Cancel</button>
-                <button onclick="saveModalNotes()" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Lecture Modal -->
-    <div id="addLectureModal" class="fixed inset-0 z-50 bg-darkbg/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-darkcard border border-darkborder rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                <h3 class="font-bold text-lg text-white">Add Extra Lecture</h3>
-                <button onclick="closeAddLectureModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Select Chapter</label>
-                    <select id="new-lecture-chapter" class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition"></select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Lecture Name / Topic</label>
-                    <input type="text" id="new-lecture-name" placeholder="e.g., Numerical Solving & MCQs" class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
-                <button onclick="closeAddLectureModal()" class="px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">Cancel</button>
-                <button onclick="submitNewLecture()" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition">Add Lecture</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Custom Chapter Modal -->
-    <div id="addChapterModal" class="fixed inset-0 z-50 bg-darkbg/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-darkcard border border-darkborder rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                <h3 class="font-bold text-lg text-white">Add Custom Chapter</h3>
-                <button onclick="closeAddChapterModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Subject</label>
-                    <input type="text" id="new-chapter-subject" readonly class="w-full bg-slate-800/50 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-400 font-semibold cursor-not-allowed">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Chapter Title</label>
-                    <input type="text" id="new-chapter-title" placeholder="e.g., Mock Test Revisions" class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
-                <button onclick="closeAddChapterModal()" class="px-4 py-2 text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">Cancel</button>
-                <button onclick="submitNewChapter()" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition">Create Chapter</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
-        <div id="toast-icon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
-        <span id="toast-message" class="text-xs sm:text-sm font-medium">Operation completed!</span>
-    </div>
-
-    <footer class="text-center py-6 text-xs text-slate-600 border-t border-slate-900/80 mt-auto">
-        NET Entry Test Tracker • Sir Bilal Zia (Physics) & Sir Hashim (Mathematics)
-    </footer>
-
-    <script>
-        const STORAGE_KEY = 'net_study_tracker_v4';
-
-        const defaultPhysicsChapters = [
-            { name: "Basic Maths", count: 1, defaultCompleted: 1 },
-            { name: "Electrostatics", count: 15, defaultCompleted: 15 },
-            { name: "Heat & Thermodynamics", count: 8, defaultCompleted: 6 },
-            { name: "Current Electricity (DC Circuits)", count: 9, defaultCompleted: 0 },
-            { name: "Electromagnetism", count: 8, defaultCompleted: 0 },
-            { name: "Electromagnetic Induction", count: 4, defaultCompleted: 0 },
-            { name: "Alternating Current (AC Circuits)", count: 5, defaultCompleted: 0 },
-            { name: "Physics of Solids", count: 3, defaultCompleted: 0 },
-            { name: "Electronics", count: 2, defaultCompleted: 0 },
-            { name: "Modern Physics", count: 3, defaultCompleted: 0 },
-            { name: "Atomic Spectra", count: 2, defaultCompleted: 0 },
-            { name: "Nuclear Physics", count: 3, defaultCompleted: 0 },
-            { name: "Vectors", count: 2, defaultCompleted: 0 },
-            { name: "Kinematics (Motion in 1D)", count: 3, defaultCompleted: 0 },
-            { name: "Projectile Motion (2D Motion)", count: 2, defaultCompleted: 0 },
-            { name: "Work, Power, Energy", count: 4, defaultCompleted: 0 },
-            { name: "Dynamics", count: 3, defaultCompleted: 0 },
-            { name: "Circular Motion", count: 5, defaultCompleted: 0 },
-            { name: "Rotational Motion", count: 3, defaultCompleted: 0 },
-            { name: "Gravitation", count: 3, defaultCompleted: 0 },
-            { name: "Oscillations (SHM)", count: 4, defaultCompleted: 0 },
-            { name: "Waves & Sound (Acoustics)", count: 4, defaultCompleted: 0 },
-            { name: "Fluid Dynamics", count: 3, defaultCompleted: 0 },
-            { name: "Physical Optics", count: 3, defaultCompleted: 0 },
-            { name: "Geometrical Instruments", count: 4, defaultCompleted: 0 },
-            { name: "Measurements", count: 3, defaultCompleted: 0 }
-        ];
-
-        const defaultMathsChapters = [
-            { name: "Analytical Geometry", count: 8, defaultCompleted: 8 },
-            { name: "Conic Section", count: 13, defaultCompleted: 13 },
-            { name: "Derivative", count: 9, defaultCompleted: 9 },
-            { name: "Vector Valued Function", count: 1, defaultCompleted: 0 },
-            { name: "Function & Limit of Function", count: 6, defaultCompleted: 0 },
-            { name: "Integration", count: 8, defaultCompleted: 0 },
-            { name: "Trigonometry", count: 8, defaultCompleted: 0 },
-            { name: "Number System and Complex Numbers", count: 3, defaultCompleted: 0 },
-            { name: "Quadratic Equations", count: 2, defaultCompleted: 0 },
-            { name: "Sequence and Series", count: 6, defaultCompleted: 0 },
-            { name: "Permutations", count: 3, defaultCompleted: 0 },
-            { name: "Combinations", count: 2, defaultCompleted: 0 },
-            { name: "Probability", count: 3, defaultCompleted: 0 },
-            { name: "Mathematical Induction & Binomial Theorem", count: 4, defaultCompleted: 0 },
-            { name: "Matrices and Determinants", count: 4, defaultCompleted: 0 },
-            { name: "Set Theory", count: 2, defaultCompleted: 0 },
-            { name: "Group Theory", count: 1, defaultCompleted: 0 },
-            { name: "Vector", count: 1, defaultCompleted: 0 },
-            { name: "Logarithm Function | Inequalities", count: 1, defaultCompleted: 0 },
-            { name: "Linear Programming | Area of Shaded Region", count: 1, defaultCompleted: 0 }
-        ];
-
-        let store = {
-            activeTab: 'overview',
-            lectures: []
-        };
-
-        let currentModalLectureId = null;
-        let selectedDifficulty = 'Medium';
-
-        function initApp() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try { store = JSON.parse(saved); } catch (e) { generateDefaultStore(); }
-            } else {
-                generateDefaultStore();
-            }
-            renderCurrentView();
-        }
-
-        function generateDefaultStore() {
-            store = { activeTab: 'overview', lectures: [] };
-            let idCount = 1;
-
-            defaultPhysicsChapters.forEach(ch => {
-                for (let i = 1; i <= ch.count; i++) {
-                    store.lectures.push({
-                        id: 'phy_' + idCount++,
-                        subject: 'physics',
-                        teacher: 'Sir Bilal Zia',
-                        chapter: ch.name,
-                        title: `Lecture ${i}: ${ch.name} Part ${i}`,
-                        status: i <= ch.defaultCompleted ? 'Complete' : 'Pending',
-                        difficulty: 'Medium',
-                        notes: ''
-                    });
-                }
-            });
-
-            defaultMathsChapters.forEach(ch => {
-                for (let i = 1; i <= ch.count; i++) {
-                    store.lectures.push({
-                        id: 'mat_' + idCount++,
-                        subject: 'maths',
-                        teacher: 'Sir Hashim',
-                        chapter: ch.name,
-                        title: `Lecture ${i}: ${ch.name} Part ${i}`,
-                        status: i <= ch.defaultCompleted ? 'Complete' : 'Pending',
-                        difficulty: 'Medium',
-                        notes: ''
-                    });
-                }
-            });
-
-            saveToStorage();
-        }
-
-        function saveToStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-        }
-
-        function switchTab(tab) {
-            store.activeTab = tab;
-            saveToStorage();
-
-            const btnOverview = document.getElementById('tab-overview');
-            const btnPhysics = document.getElementById('tab-physics');
-            const btnMaths = document.getElementById('tab-maths');
-
-            [btnOverview, btnPhysics, btnMaths].forEach(b => {
-                b.className = 'flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-400 hover:text-white';
-            });
-
-            if (tab === 'overview') {
-                btnOverview.className = 'flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-white bg-indigo-600 shadow-md';
-            } else if (tab === 'physics') {
-                btnPhysics.className = 'flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-white bg-indigo-600 shadow-md';
-            } else if (tab === 'maths') {
-                btnMaths.className = 'flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-2 text-white bg-emerald-600 shadow-md';
-            }
-
-            renderCurrentView();
-        }
-
-        function renderCurrentView() {
-            const viewOverview = document.getElementById('view-overview');
-            const viewSubject = document.getElementById('view-subject');
-
-            if (store.activeTab === 'overview') {
-                viewOverview.classList.remove('hidden');
-                viewSubject.classList.add('hidden');
-                renderOverviewView();
-            } else {
-                viewOverview.classList.add('hidden');
-                viewSubject.classList.remove('hidden');
-                setupSubjectBanner();
-                renderSubjectView();
-            }
-        }
-
-        function renderOverviewView() {
-            const totalLecs = store.lectures.length;
-            const completedLecs = store.lectures.filter(l => l.status === 'Complete').length;
-            const totalPercent = totalLecs > 0 ? Math.round((completedLecs / totalLecs) * 100) : 0;
-
-            document.getElementById('ov-total-percent').textContent = totalPercent + '%';
-            document.getElementById('ov-total-counts').textContent = `${completedLecs} / ${totalLecs} lectures`;
-            document.getElementById('ov-total-bar').style.width = totalPercent + '%';
-
-            const phyLecs = store.lectures.filter(l => l.subject === 'physics');
-            const phyComp = phyLecs.filter(l => l.status === 'Complete').length;
-            const phyPercent = phyLecs.length > 0 ? Math.round((phyComp / phyLecs.length) * 100) : 0;
-            document.getElementById('ov-physics-percent').textContent = phyPercent + '%';
-            document.getElementById('ov-physics-counts').textContent = `${phyComp} / ${phyLecs.length}`;
-            document.getElementById('ov-physics-bar').style.width = phyPercent + '%';
-
-            const matLecs = store.lectures.filter(l => l.subject === 'maths');
-            const matComp = matLecs.filter(l => l.status === 'Complete').length;
-            const matPercent = matLecs.length > 0 ? Math.round((matComp / matLecs.length) * 100) : 0;
-            document.getElementById('ov-maths-percent').textContent = matPercent + '%';
-            document.getElementById('ov-maths-counts').textContent = `${matComp} / ${matLecs.length}`;
-            document.getElementById('ov-maths-bar').style.width = matPercent + '%';
-
-            renderOverviewChapterList('physics', 'overview-physics-list');
-            renderOverviewChapterList('maths', 'overview-maths-list');
-        }
-
-        function renderOverviewChapterList(subject, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            
-            const subLecs = store.lectures.filter(l => l.subject === subject);
-            const chapters = [...new Set(subLecs.map(l => l.chapter))];
-
-            chapters.forEach(chName => {
-                const chLecs = subLecs.filter(l => l.chapter === chName);
-                const done = chLecs.filter(l => l.status === 'Complete').length;
-                const pct = chLecs.length > 0 ? Math.round((done / chLecs.length) * 100) : 0;
-
-                const item = document.createElement('div');
-                item.className = 'bg-darkbg border border-slate-800/80 p-3 rounded-xl flex items-center justify-between text-xs';
-                item.innerHTML = `
-                    <div class="flex-1 pr-3">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-semibold text-slate-200 truncate">${chName}</span>
-                            <span class="font-bold ${pct === 100 ? 'text-emerald-400' : 'text-slate-400'}">${done}/${chLecs.length}</span>
-                        </div>
-                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                            <div class="${subject === 'physics' ? 'bg-indigo-500' : 'bg-emerald-500'} h-full rounded-full" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function setupSubjectBanner() {
-            const isPhysics = store.activeTab === 'physics';
-            const badge = document.getElementById('subject-badge');
-            const title = document.getElementById('subject-title');
-            const teacher = document.getElementById('subject-teacher');
-            const banner = document.getElementById('subject-banner');
-
-            if (isPhysics) {
-                badge.textContent = 'PHYSICS';
-                badge.className = 'px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full';
-                title.textContent = 'Physics Mastery Tracker';
-                teacher.textContent = 'Teacher: Sir Bilal Zia';
-                banner.className = 'bg-gradient-to-r from-indigo-950/80 via-darkcard to-slate-900 border border-darkborder rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4';
-            } else {
-                badge.textContent = 'MATHEMATICS';
-                badge.className = 'px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-full';
-                title.textContent = 'Mathematics Mastery Tracker';
-                teacher.textContent = 'Teacher: Sir Hashim';
-                banner.className = 'bg-gradient-to-r from-emerald-950/80 via-darkcard to-slate-900 border border-darkborder rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4';
-            }
-        }
-
-        function renderSubjectView() {
-            const container = document.getElementById('subject-chapters-container');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            container.innerHTML = '';
-
-            const currentSubject = store.activeTab;
-            const subjectLectures = store.lectures.filter(l => l.subject === currentSubject);
-            const chapters = [...new Set(subjectLectures.map(l => l.chapter))];
-
-            let hasVisibleContent = false;
-
-            chapters.forEach(chName => {
-                const allChLecs = subjectLectures.filter(l => l.chapter === chName);
-                
-                const filteredLecs = allChLecs.filter(l => {
-                    const matchesSearch = l.title.toLowerCase().includes(searchVal) || l.chapter.toLowerCase().includes(searchVal);
-                    const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
-                    return matchesSearch && matchesStatus;
-                });
-
-                const chMatchesSearch = chName.toLowerCase().includes(searchVal);
-                if (filteredLecs.length === 0 && !chMatchesSearch && searchVal !== '') return;
-
-                const displayLecs = (chMatchesSearch && searchVal !== '' && filteredLecs.length === 0) ? allChLecs : filteredLecs;
-                if (searchVal !== '' && !chMatchesSearch && filteredLecs.length === 0) return;
-
-                hasVisibleContent = true;
-
-                const total = allChLecs.length;
-                const completed = allChLecs.filter(l => l.status === 'Complete').length;
-                const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-                const card = document.createElement('div');
-                card.className = 'bg-darkcard border border-darkborder rounded-2xl shadow-xl overflow-hidden';
-
-                let lecturesHTML = '';
-                displayLecs.forEach(lec => {
-                    const isDone = lec.status === 'Complete';
-                    lecturesHTML += `
-                        <div class="p-3.5 sm:px-6 flex items-center justify-between border-b border-slate-800/60 hover:bg-slate-800/30 transition group">
-                            <div class="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0 pr-4">
-                                <button id="btn-${lec.id}" onclick="toggleLecture('${lec.id}')" class="check-box-btn w-6 h-6 rounded-lg flex items-center justify-center border transition shrink-0 ${isDone ? 'is-checked text-darkbg' : 'bg-darkbg border-slate-700 text-slate-500 hover:border-indigo-500 hover:text-slate-300'}">
-                                    <i id="icon-${lec.id}" class="fa-solid fa-check text-xs ${isDone ? 'block animate-pop-check' : 'hidden'}"></i>
-                                </button>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xs sm:text-sm font-medium text-slate-200 truncate ${isDone ? 'line-through text-slate-500' : ''}">${lec.title}</div>
-                                    ${lec.notes ? `<div class="text-[11px] text-indigo-400 mt-0.5 truncate"><i class="fa-regular fa-note-sticky mr-1"></i>${lec.notes}</div>` : ''}
-                                </div>
-                            </div>
-
-                            <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
-                                <span class="px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold rounded-full border ${getDifficultyBadge(lec.difficulty)}">
-                                    ${lec.difficulty}
-                                </span>
-                                <button onclick="openModal('${lec.id}')" class="px-2.5 py-1.5 bg-darkbg hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-medium transition border border-slate-700" title="Notes & Difficulty">
-                                    <i class="fa-regular fa-pen-to-square text-indigo-400"></i>
-                                </button>
-                                <button onclick="deleteLecture('${lec.id}')" class="px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-medium transition border border-rose-900/50" title="Delete Lecture">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                card.innerHTML = `
-                    <div class="p-4 sm:p-5 bg-darkbg/70 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center space-x-3">
-                                <h3 class="font-bold text-base sm:text-lg text-white">${chName}</h3>
-                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${percent === 100 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-300'}">${percent}%</span>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-0.5">${completed} of ${total} lectures finished</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-28 sm:w-36 bg-slate-800 h-2 rounded-full overflow-hidden hidden sm:block">
-                                <div class="${currentSubject === 'physics' ? 'bg-indigo-500' : 'bg-emerald-500'} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                            </div>
-                            <button onclick="addQuickLectureToChapter('${chName.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
-                                <i class="fa-solid fa-plus text-[10px]"></i>
-                                <span>Lecture</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="divide-y divide-slate-800/40">
-                        ${lecturesHTML || '<div class="p-4 text-center text-xs text-slate-500">No lectures match filter</div>'}
-                    </div>
-                `;
-
-                container.appendChild(card);
-            });
-
-            if (!hasVisibleContent) {
-                container.innerHTML = `
-                    <div class="bg-darkcard border border-darkborder rounded-2xl p-12 text-center text-slate-500 shadow-xl">
-                        <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
-                        <p class="text-sm">No chapters or lectures found.</p>
-                    </div>
-                `;
-            }
-        }
-
-        function getDifficultyBadge(diff) {
-            if (diff === 'Easy') return 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50';
-            if (diff === 'Hard') return 'bg-rose-950/40 text-rose-400 border-rose-900/50';
-            return 'bg-amber-950/40 text-amber-400 border-amber-900/50';
-        }
-
-        // Toggle Lecture Completion with Pop Animation
-        function toggleLecture(id) {
-            const lec = store.lectures.find(l => l.id === id);
-            if (!lec) return;
-
-            lec.status = lec.status === 'Complete' ? 'Pending' : 'Complete';
-            saveToStorage();
-
-            const btn = document.getElementById(`btn-${id}`);
-            const icon = document.getElementById(`icon-${id}`);
-
-            if (btn && icon) {
-                if (lec.status === 'Complete') {
-                    btn.classList.add('is-checked', 'text-darkbg');
-                    btn.classList.remove('bg-darkbg', 'border-slate-700', 'text-slate-500');
-                    icon.classList.remove('hidden');
-                    icon.classList.add('animate-pop-check');
-                    showToast('Topic Completed! 🎉');
-                } else {
-                    btn.classList.remove('is-checked', 'text-darkbg');
-                    btn.classList.add('bg-darkbg', 'border-slate-700', 'text-slate-500');
-                    icon.classList.add('hidden');
-                    icon.classList.remove('animate-pop-check');
-                    showToast('Marked pending');
-                }
-            }
-
-            setTimeout(() => {
-                renderCurrentView();
-            }, 250);
-        }
-
-        function deleteLecture(id) {
-            if (confirm('Are you sure you want to delete this lecture?')) {
-                store.lectures = store.lectures.filter(l => l.id !== id);
-                saveToStorage();
-                renderCurrentView();
-                showToast('Lecture deleted.');
-            }
-        }
-
-        function addQuickLectureToChapter(chName) {
-            const subject = store.activeTab;
-            const existingInCh = store.lectures.filter(l => l.subject === subject && l.chapter === chName);
-            const nextNum = existingInCh.length + 1;
-
-            const newLec = {
-                id: (subject === 'physics' ? 'phy_' : 'mat_') + Date.now(),
-                subject: subject,
-                teacher: subject === 'physics' ? 'Sir Bilal Zia' : 'Sir Hashim',
-                chapter: chName,
-                title: `Lecture ${nextNum}: ${chName} Part ${nextNum}`,
-                status: 'Pending',
-                difficulty: 'Medium',
-                notes: ''
-            };
-
-            store.lectures.push(newLec);
-            saveToStorage();
-            renderCurrentView();
-            showToast(`Added extra lecture to ${chName}!`);
-        }
-
-        function populateChapterDropdown() {
-            const select = document.getElementById('new-lecture-chapter');
-            const subject = store.activeTab;
-            const subjectLecs = store.lectures.filter(l => l.subject === subject);
-            const uniqueChapters = [...new Set(subjectLecs.map(l => l.chapter))];
-
-            select.innerHTML = '';
-            uniqueChapters.forEach(ch => {
-                const opt = document.createElement('option');
-                opt.value = ch;
-                opt.textContent = ch;
-                select.appendChild(opt);
-            });
-        }
-
-        function openAddLectureModal() {
-            populateChapterDropdown();
-            document.getElementById('new-lecture-name').value = '';
-            document.getElementById('addLectureModal').classList.remove('hidden');
-        }
-
-        function closeAddLectureModal() {
-            document.getElementById('addLectureModal').classList.add('hidden');
-        }
-
-        function submitNewLecture() {
-            const chapter = document.getElementById('new-lecture-chapter').value;
-            const title = document.getElementById('new-lecture-name').value.trim();
-            const subject = store.activeTab;
-
-            if (!title) {
-                showToast('Please enter a lecture name.', true);
-                return;
-            }
-
-            const newLec = {
-                id: (subject === 'physics' ? 'phy_' : 'mat_') + Date.now(),
-                subject: subject,
-                teacher: subject === 'physics' ? 'Sir Bilal Zia' : 'Sir Hashim',
-                chapter: chapter,
-                title: title,
-                status: 'Pending',
-                difficulty: 'Medium',
-                notes: ''
-            };
-
-            store.lectures.push(newLec);
-            saveToStorage();
-            renderCurrentView();
-            closeAddLectureModal();
-            showToast('New lecture added successfully!');
-        }
-
-        function openAddChapterModal() {
-            const subjectName = store.activeTab === 'physics' ? 'Physics (Sir Bilal Zia)' : 'Mathematics (Sir Hashim)';
-            document.getElementById('new-chapter-subject').value = subjectName;
-            document.getElementById('new-chapter-title').value = '';
-            document.getElementById('addChapterModal').classList.remove('hidden');
-        }
-
-        function closeAddChapterModal() {
-            document.getElementById('addChapterModal').classList.add('hidden');
-        }
-
-        function submitNewChapter() {
-            const chTitle = document.getElementById('new-chapter-title').value.trim();
-            const subject = store.activeTab;
-
-            if (!chTitle) {
-                showToast('Please enter a chapter title.', true);
-                return;
-            }
-
-            const initialLec = {
-                id: (subject === 'physics' ? 'phy_' : 'mat_') + Date.now(),
-                subject: subject,
-                teacher: subject === 'physics' ? 'Sir Bilal Zia' : 'Sir Hashim',
-                chapter: chTitle,
-                title: `Lecture 1: ${chTitle} Introduction`,
-                status: 'Pending',
-                difficulty: 'Medium',
-                notes: ''
-            };
-
-            store.lectures.push(initialLec);
-            saveToStorage();
-            renderCurrentView();
-            closeAddChapterModal();
-            showToast(`Custom chapter "${chTitle}" created!`);
-        }
-
-        function openModal(id) {
-            currentModalLectureId = id;
-            const lec = store.lectures.find(l => l.id === id);
-            if (!lec) return;
-
-            document.getElementById('modal-lecture-title').textContent = lec.title;
-            document.getElementById('modal-chapter-info').textContent = `${lec.chapter} (${lec.teacher})`;
-            document.getElementById('modal-notes-input').value = lec.notes || '';
-
-            selectedDifficulty = lec.difficulty || 'Medium';
-            updateDifficultyUI();
-
-            document.getElementById('noteModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('noteModal').classList.add('hidden');
-            currentModalLectureId = null;
-        }
-
-        function setDifficulty(diff) {
-            selectedDifficulty = diff;
-            updateDifficultyUI();
-        }
-
-        function updateDifficultyUI() {
-            ['Easy', 'Medium', 'Hard'].forEach(d => {
-                const btn = document.getElementById(`diff-${d}`);
-                if (d === selectedDifficulty) {
-                    if (d === 'Easy') btn.className = 'py-2 text-xs font-semibold rounded-xl border border-emerald-500 bg-emerald-950/60 text-emerald-400 shadow-md';
-                    else if (d === 'Medium') btn.className = 'py-2 text-xs font-semibold rounded-xl border border-amber-500 bg-amber-950/60 text-amber-400 shadow-md';
-                    else btn.className = 'py-2 text-xs font-semibold rounded-xl border border-rose-500 bg-rose-950/60 text-rose-400 shadow-md';
-                } else {
-                    btn.className = 'py-2 text-xs font-medium rounded-xl border border-slate-800 bg-darkbg text-slate-400 hover:border-slate-700';
-                }
-            });
-        }
-
-        function saveModalNotes() {
-            if (currentModalLectureId) {
-                const lec = store.lectures.find(l => l.id === currentModalLectureId);
-                if (lec) {
-                    lec.notes = document.getElementById('modal-notes-input').value;
-                    lec.difficulty = selectedDifficulty;
-                    saveToStorage();
-                    renderCurrentView();
-                    closeModal();
-                    showToast('Lecture details updated!');
-                }
-            }
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(store, null, 2));
-            const anchor = document.createElement('a');
-            anchor.setAttribute("href", dataStr);
-            anchor.setAttribute("download", "NET_Study_Tracker_Backup.json");
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            showToast('Backup JSON exported!');
-        }
-
-        function importData(event) {
-            const reader = new FileReader();
-            if (event.target.files[0]) {
-                reader.readAsText(event.target.files[0], "UTF-8");
-                reader.onload = (e) => {
-                    try {
-                        const parsed = JSON.parse(e.target.result);
-                        if (parsed && Array.isArray(parsed.lectures)) {
-                            store = parsed;
-                            saveToStorage();
-                            switchTab(store.activeTab || 'overview');
-                            showToast('Backup restored successfully!');
-                        } else {
-                            showToast('Invalid backup format.', true);
-                        }
-                    } catch (err) {
-                        showToast('Error parsing JSON backup file.', true);
-                    }
-                };
-            }
-        }
-
-        function resetAllData() {
-            if (confirm("Are you sure you want to reset all Physics and Mathematics progress to defaults?")) {
-                localStorage.removeItem(STORAGE_KEY);
-                generateDefaultStore();
-                renderCurrentView();
-                showToast('Tracker reset to initial state.');
-            }
-        }
-
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-message');
-            const toastIcon = document.getElementById('toast-icon');
-
-            toastMsg.textContent = message;
-            toastIcon.innerHTML = isError ? 
-                '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>' : 
-                '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 2500);
-        }
-
-        window.onload = initApp;
-    </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NET 1 Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1d2021;--s1:#242627;--s2:#2c2e2d;--ln:#3c3836;--ln2:#504945;--fg:#ebdbb2;--mut:#a89984;--dim:#7c6f64;--or:#fe8019;--ye:#fabd2f;--gr:#b8bb26;--rd:#fb4934;--aq:#8ec07c;--bl:#83a598;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.d{font-family:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:880px;margin:0 auto;padding:22px 20px 90px}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--or);outline-offset:2px;border-radius:6px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:18px}
+.brand b{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1}.brand b i{font-style:normal;color:var(--or)}
+.brand span{display:block;color:var(--mut);font-size:13px;margin-top:4px}
+.act{display:flex;gap:8px;align-items:center;margin-left:auto}
+.btn{display:inline-flex;gap:7px;align-items:center;background:none;border:1px solid var(--ln2);border-radius:9px;padding:7px 13px;font-size:13px;font-weight:600;transition:border-color .2s,background .2s,color .2s}
+.btn:hover{border-color:var(--or);color:var(--or)}.btn svg{width:15px;height:15px}.btn.pri{background:var(--or);border-color:var(--or);color:#1d2021}.btn.pri:hover{background:var(--ye);border-color:var(--ye);color:#1d2021}
+.btn.txt{border:0;padding:7px 4px;color:var(--dim)}.btn.txt:hover{color:var(--fg)}
+.sv{font-size:12px;color:var(--dim);margin-right:4px}
+nav{display:flex;gap:26px;border-bottom:1px solid var(--ln);margin-bottom:28px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+nav button{background:none;border:0;padding:12px 0;font-weight:600;color:var(--dim);position:relative;transition:color .2s}
+nav button:hover{color:var(--fg)}nav button.on{color:var(--fg)}
+nav button:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--or);transform:scaleX(0);transition:transform .3s cubic-bezier(.2,.8,.2,1)}nav button.on:after{transform:scaleX(1)}
+h2{margin:0;font-weight:700;font-size:13px;color:var(--mut);letter-spacing:.01em}
+.hero{background:var(--s1);border:1px solid var(--ln);border-radius:20px;padding:26px 26px 24px}
+.hero h1{margin:0 0 6px;font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.035em;line-height:1.08}
+.hero p{margin:0;color:var(--mut)}
+.pace{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px;margin-top:26px}
+.meter .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.meter .top b{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1}.meter .top b small{font-size:17px;color:var(--dim);font-weight:600}
+.meter .top span{color:var(--mut);font-size:13px;font-weight:600}
+.blocks{display:flex;flex-wrap:wrap;gap:5px}.blocks i{width:26px;height:12px;border-radius:4px;background:var(--ln);transition:background .35s,transform .35s cubic-bezier(.34,1.6,.64,1)}
+.blocks i.f{background:var(--or);transform:scaleY(1.25)}.blocks.y i.f{background:var(--ye)}.blocks i.x{background:var(--gr)}
+.week{display:flex;gap:8px;margin-top:24px;padding-top:20px;border-top:1px solid var(--ln);align-items:center}
+.week .lab{flex:1;color:var(--mut);font-size:13px}.day{width:30px;text-align:center;font-size:11px;color:var(--dim)}.day i{display:block;width:30px;height:30px;border-radius:9px;margin-bottom:4px;background:var(--bg);border:1px solid var(--ln)}
+.day.p i{background:rgba(254,128,25,.25);border-color:rgba(254,128,25,.5)}.day.m i{background:var(--gr);border-color:var(--gr)}.day.t i{border-color:var(--or)}.day.t{color:var(--fg)}
+.sec{margin-top:34px}.sec>h2{margin-bottom:6px}
+.task{display:flex;gap:14px;align-items:center;padding:13px 2px;border-bottom:1px solid var(--ln);cursor:pointer}
+.task .tx{flex:1;min-width:0}.task .tx b{font-weight:600;display:block;transition:color .3s}.task .tx small{color:var(--dim);font-size:12.5px}
+.task.k .tx b{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--or)}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--s2);color:var(--mut)}.tag.ph{color:var(--bl)}.tag.ma{color:var(--aq)}.tag.sh{color:var(--ye)}
+.cb{appearance:none;-webkit-appearance:none;margin:0;width:26px;height:26px;border:2px solid var(--ln2);border-radius:9px;position:relative;flex:none;cursor:pointer;background:var(--bg);transition:background .2s,border-color .2s}
+.cb:hover{border-color:var(--or)}.cb:checked{background:var(--or);border-color:var(--or);animation:pop .4s}.cb.y:checked{background:var(--ye);border-color:var(--ye)}
+.cb:after{content:'';position:absolute;left:8px;top:2px;width:7px;height:13px;border:solid #1d2021;border-width:0 3px 3px 0;transform:rotate(45deg) scale(0);transition:transform .3s cubic-bezier(.34,1.8,.64,1)}.cb:checked:after{transform:rotate(45deg) scale(1)}
+.cb:before{content:'';position:absolute;inset:-2px;border-radius:10px;border:2px solid var(--or);opacity:0;pointer-events:none}.cb:checked:before{animation:rip .55s ease-out}
+@keyframes pop{40%{transform:scale(.82)}70%{transform:scale(1.15)}}@keyframes rip{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(2.1)}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:24px}
+.stat b{display:block;font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1}.stat span{color:var(--mut);font-size:13px}
+.bar{height:6px;background:var(--ln);border-radius:9px;position:relative;margin-top:10px}.bar i{display:block;height:100%;border-radius:9px;background:var(--or);transition:width .9s cubic-bezier(.2,.8,.2,1)}.bar.y i{background:var(--ye)}
+.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:2px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.prog{margin-top:14px}.prog .row{font-size:13px;color:var(--mut);margin-bottom:2px}.prog .row b{color:var(--fg);font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:34px}
+.fb{display:flex;gap:10px;margin-bottom:12px}.fb input{flex:1;background:var(--s1);border:1px solid var(--ln);border-radius:10px;padding:9px 13px;outline:0}.fb input:focus{border-color:var(--or)}.fb .btn.on{background:var(--or);border-color:var(--or);color:#1d2021}
+details{border-bottom:1px solid var(--ln)}summary{list-style:none;cursor:pointer;padding:15px 2px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center}summary::-webkit-details-marker{display:none}
+summary b{font-weight:600;font-size:16px}summary .m{color:var(--mut);font-size:13px;display:flex;gap:14px;align-items:center}summary .m em{font-style:normal;color:var(--ye)}summary .bar{grid-column:1/-1;margin-top:6px;height:4px}
+.chev{width:14px;height:14px;transition:transform .3s;color:var(--dim)}details[open] .chev{transform:rotate(90deg);color:var(--or)}
+.ok{color:var(--gr);font-size:12px;font-weight:700;margin-left:8px}
+.chs{padding:2px 2px 18px}.chs .sh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{height:34px;min-width:44px;padding:0 12px;border-radius:9px;border:1px solid var(--ln2);background:none;color:var(--mut);font-weight:700;font-size:13px;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.chip:hover{border-color:var(--ye);color:var(--ye)}.chip.d{background:var(--ye);border-color:var(--ye);color:#1d2021;transform:translateY(-1px)}
+.mini{width:34px;height:34px;border-radius:9px;border:1px dashed var(--ln2);background:none;color:var(--dim);font-size:18px;line-height:1}.mini:hover{border-color:var(--or);color:var(--or)}
+.empty{color:var(--dim);padding:26px 0}
+dialog{background:var(--s1);color:var(--fg);border:1px solid var(--ln2);border-radius:18px;padding:24px;width:min(400px,90vw)}dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h3{margin:0 0 8px;font-size:19px}dialog p{margin:0 0 18px;color:var(--mut);font-size:14px}
+.toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%,24px);background:var(--s2);border:1px solid var(--ln2);padding:10px 18px;border-radius:12px;opacity:0;transition:.3s;pointer-events:none;z-index:20;font-size:14px}.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:560px){.hero{padding:20px}.wrap{padding:18px 14px 90px}.blocks i{width:22px}.sv{display:none}}
+.bars{display:flex;gap:6px;align-items:flex-end;margin-top:14px}.bc{flex:1;text-align:center;font-size:11px;color:var(--dim)}.bc.t{color:var(--fg)}.bt{height:96px;position:relative;background:var(--s1);border-radius:7px;margin-bottom:6px;overflow:hidden}
+.bt i{position:absolute;left:0;right:0;bottom:0;background:var(--or);border-radius:5px 5px 0 0;min-height:0;transition:height .8s cubic-bezier(.2,.8,.2,1)}.bt i.m{background:var(--gr)}.bt u{position:absolute;left:0;right:0;height:2px;background:var(--fg);opacity:.6}
+.sub{margin-top:26px}.map{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:12px}.cl{display:flex;flex-wrap:wrap;gap:3px;max-width:104px;background:none;border:0;padding:5px;border-radius:8px;transition:background .2s}.cl:hover{background:var(--s2)}
+.cl i{width:10px;height:10px;border-radius:3px;background:var(--ln)}.cl i.f{background:var(--or)}.cl i.s{border-radius:50%;background:none;box-shadow:inset 0 0 0 1.5px var(--ln2)}.cl i.s.f{background:var(--ye);box-shadow:none}
+.pr{display:flex;align-items:center;gap:12px}.pr .bar{flex:1;margin:0;height:8px}.pr b{min-width:44px;text-align:right;font-size:15px;font-weight:700}
+</style></head><body><div class="wrap">
+<header><div class="brand"><b class="d">NET<i>1</i> prep</b><span id="sub"></span></div>
+<div class="act"><span class="sv" id="sv"></span><button class="btn txt" id="bUndo" hidden>Undo import</button>
+<button class="btn" id="bImp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L7 8m5-5 5 5M4 17v3h16v-3"/></svg>Import</button>
+<button class="btn pri" id="bExp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg>Export</button></div></header>
+<nav id="nav"></nav><main id="main"></main></div>
+<dialog id="dlg"><h3 id="dT"></h3><p id="dP"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="dNo">Cancel</button><button class="btn pri" id="dOk">Confirm</button></div></dialog>
+<input type="file" id="file" accept=".json,application/json" hidden><div class="toast" id="toast"></div>
+<script>
+/* SCHEMA net-tracker/v2 (additive: log)
+ {schema,session:{id,name,created},settings:{start,target},subjects:{key:{name,teacher}},
+  chapters:[{id,subject,name}],lectures:[{id,chapterId,title,done,doneAt,notes}],
+  sheets:[{id,chapterId,title,done,doneAt}], log:{"YYYY-MM-DD":{tl,tp}}  // frozen daily targets */
+const LEG=[["physics","Basic Maths","Lecture 1: Basic Maths Part 1",1],["physics","Electrostatics","Lecture 1: Electrostatics Part 1",1],["physics","Electrostatics","Lecture 2: Electrostatics Part 2",1],["physics","Electrostatics","Lecture 3: Electrostatics Part 3",1],["physics","Electrostatics","Lecture 4: Electrostatics Part 4",1],["physics","Electrostatics","Lecture 5: Electrostatics Part 5",1],["physics","Electrostatics","Lecture 6: Electrostatics Part 6",1],["physics","Electrostatics","Lecture 7: Electrostatics Part 7",1],["physics","Electrostatics","Lecture 8: Electrostatics Part 8",1],["physics","Electrostatics","Lecture 9: Electrostatics Part 9",1],["physics","Electrostatics","Lecture 10: Electrostatics Part 10",1],["physics","Electrostatics","Lecture 11: Electrostatics Part 11",1],["physics","Electrostatics","Lecture 12: Electrostatics Part 12",1],["physics","Electrostatics","Lecture 13: Electrostatics Part 13",1],["physics","Electrostatics","Lecture 14: Electrostatics Part 14",1],["physics","Electrostatics","Lecture 15: Electrostatics Part 15",1],["physics","Heat & Thermodynamics","Lecture 1: Heat & Thermodynamics Part 1",1],["physics","Heat & Thermodynamics","Lecture 2: Heat & Thermodynamics Part 2",1],["physics","Heat & Thermodynamics","Lecture 3: Heat & Thermodynamics Part 3",1],["physics","Heat & Thermodynamics","Lecture 4: Heat & Thermodynamics Part 4",1],["physics","Heat & Thermodynamics","Lecture 5: Heat & Thermodynamics Part 5",1],["physics","Heat & Thermodynamics","Lecture 6: Heat & Thermodynamics Part 6",1],["physics","Heat & Thermodynamics","Lecture 7: Heat & Thermodynamics Part 7",1],["physics","Heat & Thermodynamics","Lecture 8: Heat & Thermodynamics Part 8",1],["physics","Current Electricity (DC Circuits)","Lecture 1: Current Electricity (DC Circuits) Part 1",0],["physics","Current Electricity (DC Circuits)","Lecture 2: Current Electricity (DC Circuits) Part 2",0],["physics","Current Electricity (DC Circuits)","Lecture 3: Current Electricity (DC Circuits) Part 3",0],["physics","Current Electricity (DC Circuits)","Lecture 4: Current Electricity (DC Circuits) Part 4",0],["physics","Current Electricity (DC Circuits)","Lecture 5: Current Electricity (DC Circuits) Part 5",0],["physics","Current Electricity (DC Circuits)","Lecture 6: Current Electricity (DC Circuits) Part 6",0],["physics","Current Electricity (DC Circuits)","Lecture 7: Current Electricity (DC Circuits) Part 7",0],["physics","Current Electricity (DC Circuits)","Lecture 8: Current Electricity (DC Circuits) Part 8",0],["physics","Current Electricity (DC Circuits)","Lecture 9: Current Electricity (DC Circuits) Part 9",0],["physics","Electromagnetism","Lecture 1: Electromagnetism Part 1",0],["physics","Electromagnetism","Lecture 2: Electromagnetism Part 2",0],["physics","Electromagnetism","Lecture 3: Electromagnetism Part 3",0],["physics","Electromagnetism","Lecture 4: Electromagnetism Part 4",0],["physics","Electromagnetism","Lecture 5: Electromagnetism Part 5",0],["physics","Electromagnetism","Lecture 6: Electromagnetism Part 6",0],["physics","Electromagnetism","Lecture 7: Electromagnetism Part 7",0],["physics","Electromagnetism","Lecture 8: Electromagnetism Part 8",0],["physics","Electromagnetic Induction","Lecture 1: Electromagnetic Induction Part 1",0],["physics","Electromagnetic Induction","Lecture 2: Electromagnetic Induction Part 2",0],["physics","Electromagnetic Induction","Lecture 3: Electromagnetic Induction Part 3",0],["physics","Electromagnetic Induction","Lecture 4: Electromagnetic Induction Part 4",0],["physics","Alternating Current (AC Circuits)","Lecture 1: Alternating Current (AC Circuits) Part 1",0],["physics","Alternating Current (AC Circuits)","Lecture 2: Alternating Current (AC Circuits) Part 2",0],["physics","Alternating Current (AC Circuits)","Lecture 3: Alternating Current (AC Circuits) Part 3",0],["physics","Alternating Current (AC Circuits)","Lecture 4: Alternating Current (AC Circuits) Part 4",0],["physics","Alternating Current (AC Circuits)","Lecture 5: Alternating Current (AC Circuits) Part 5",0],["physics","Physics of Solids","Lecture 1: Physics of Solids Part 1",0],["physics","Physics of Solids","Lecture 2: Physics of Solids Part 2",0],["physics","Physics of Solids","Lecture 3: Physics of Solids Part 3",0],["physics","Electronics","Lecture 1: Electronics Part 1",0],["physics","Electronics","Lecture 2: Electronics Part 2",0],["physics","Modern Physics","Lecture 1: Modern Physics Part 1",0],["physics","Modern Physics","Lecture 2: Modern Physics Part 2",0],["physics","Modern Physics","Lecture 3: Modern Physics Part 3",0],["physics","Atomic Spectra","Lecture 1: Atomic Spectra Part 1",0],["physics","Atomic Spectra","Lecture 2: Atomic Spectra Part 2",0],["physics","Nuclear Physics","Lecture 1: Nuclear Physics Part 1",0],["physics","Nuclear Physics","Lecture 2: Nuclear Physics Part 2",0],["physics","Nuclear Physics","Lecture 3: Nuclear Physics Part 3",0],["physics","Vectors","Lecture 1: Vectors Part 1",1],["physics","Vectors","Lecture 2: Vectors Part 2",1],["physics","Kinematics (Motion in 1D)","Lecture 1: Kinematics (Motion in 1D) Part 1",1],["physics","Kinematics (Motion in 1D)","Lecture 2: Kinematics (Motion in 1D) Part 2",1],["physics","Kinematics (Motion in 1D)","Lecture 3: Kinematics (Motion in 1D) Part 3",1],["physics","Projectile Motion (2D Motion)","Lecture 1: Projectile Motion (2D Motion) Part 1",1],["physics","Projectile Motion (2D Motion)","Lecture 2: Projectile Motion (2D Motion) Part 2",1],["physics","Work, Power, Energy","Lecture 1: Work, Power, Energy Part 1",0],["physics","Work, Power, Energy","Lecture 2: Work, Power, Energy Part 2",0],["physics","Work, Power, Energy","Lecture 3: Work, Power, Energy Part 3",0],["physics","Work, Power, Energy","Lecture 4: Work, Power, Energy Part 4",0],["physics","Dynamics","Lecture 1: Dynamics Part 1",0],["physics","Dynamics","Lecture 2: Dynamics Part 2",0],["physics","Dynamics","Lecture 3: Dynamics Part 3",0],["physics","Circular Motion","Lecture 1: Circular Motion Part 1",1],["physics","Circular Motion","Lecture 2: Circular Motion Part 2",1],["physics","Circular Motion","Lecture 3: Circular Motion Part 3",1],["physics","Circular Motion","Lecture 4: Circular Motion Part 4",1],["physics","Rotational Motion","Lecture 1: Rotational Motion Part 1",1],["physics","Rotational Motion","Lecture 2: Rotational Motion Part 2",1],["physics","Rotational Motion","Lecture 3: Rotational Motion Part 3",1],["physics","Gravitation","Lecture 1: Gravitation Part 1",0],["physics","Oscillations (SHM)","Lecture 1: Oscillations (SHM) Part 1",0],["physics","Oscillations (SHM)","Lecture 2: Oscillations (SHM) Part 2",0],["physics","Oscillations (SHM)","Lecture 3: Oscillations (SHM) Part 3",0],["physics","Oscillations (SHM)","Lecture 4: Oscillations (SHM) Part 4",0],["physics","Waves & Sound (Acoustics)","Lecture 1: Waves & Sound (Acoustics) Part 1",0],["physics","Waves & Sound (Acoustics)","Lecture 2: Waves & Sound (Acoustics) Part 2",0],["physics","Waves & Sound (Acoustics)","Lecture 3: Waves & Sound (Acoustics) Part 3",0],["physics","Waves & Sound (Acoustics)","Lecture 4: Waves & Sound (Acoustics) Part 4",0],["physics","Fluid Dynamics","Lecture 1: Fluid Dynamics Part 1",0],["physics","Fluid Dynamics","Lecture 2: Fluid Dynamics Part 2",0],["physics","Fluid Dynamics","Lecture 3: Fluid Dynamics Part 3",0],["physics","Physical Optics","Lecture 1: Physical Optics Part 1",0],["physics","Physical Optics","Lecture 2: Physical Optics Part 2",0],["physics","Physical Optics","Lecture 3: Physical Optics Part 3",0],["physics","Geometrical Instruments","Lecture 1: Geometrical Instruments Part 1",0],["physics","Geometrical Instruments","Lecture 2: Geometrical Instruments Part 2",0],["physics","Geometrical Instruments","Lecture 3: Geometrical Instruments Part 3",0],["physics","Geometrical Instruments","Lecture 4: Geometrical Instruments Part 4",0],["physics","Measurements","Lecture 1: Measurements Part 1",0],["physics","Measurements","Lecture 2: Measurements Part 2",0],["physics","Measurements","Lecture 3: Measurements Part 3",0],["maths","Analytical Geometry","Lecture 1: Analytical Geometry Part 1",1],["maths","Analytical Geometry","Lecture 2: Analytical Geometry Part 2",1],["maths","Analytical Geometry","Lecture 3: Analytical Geometry Part 3",1],["maths","Analytical Geometry","Lecture 4: Analytical Geometry Part 4",1],["maths","Analytical Geometry","Lecture 5: Analytical Geometry Part 5",1],["maths","Analytical Geometry","Lecture 6: Analytical Geometry Part 6",1],["maths","Analytical Geometry","Lecture 7: Analytical Geometry Part 7",1],["maths","Analytical Geometry","Lecture 8: Analytical Geometry Part 8",1],["maths","Conic Section","Lecture 1: Conic Section Part 1",1],["maths","Conic Section","Lecture 2: Conic Section Part 2",1],["maths","Conic Section","Lecture 3: Conic Section Part 3",1],["maths","Conic Section","Lecture 4: Conic Section Part 4",1],["maths","Conic Section","Lecture 5: Conic Section Part 5",1],["maths","Conic Section","Lecture 6: Conic Section Part 6",1],["maths","Conic Section","Lecture 7: Conic Section Part 7",1],["maths","Conic Section","Lecture 8: Conic Section Part 8",1],["maths","Conic Section","Lecture 9: Conic Section Part 9",1],["maths","Conic Section","Lecture 10: Conic Section Part 10",1],["maths","Conic Section","Lecture 11: Conic Section Part 11",1],["maths","Conic Section","Lecture 12: Conic Section Part 12",1],["maths","Conic Section","Lecture 13: Conic Section Part 13",1],["maths","Derivative","Lecture 1: Derivative Part 1",1],["maths","Derivative","Lecture 2: Derivative Part 2",1],["maths","Derivative","Lecture 3: Derivative Part 3",1],["maths","Derivative","Lecture 4: Derivative Part 4",1],["maths","Vector Valued Function","Lecture 1: Vector Valued Function Part 1",0],["maths","Function & Limit of Function","Lecture 1: Function & Limit of Function Part 1",1],["maths","Function & Limit of Function","Lecture 2: Function & Limit of Function Part 2",1],["maths","Function & Limit of Function","Lecture 3: Function & Limit of Function Part 3",1],["maths","Function & Limit of Function","Lecture 4: Function & Limit of Function Part 4",1],["maths","Integration","Lecture 1: Integration Part 1",1],["maths","Integration","Lecture 2: Integration Part 2",0],["maths","Integration","Lecture 3: Integration Part 3",0],["maths","Integration","Lecture 4: Integration Part 4",0],["maths","Integration","Lecture 5: Integration Part 5",0],["maths","Trigonometry","Lecture 1: Trigonometry Part 1",0],["maths","Trigonometry","Lecture 2: Trigonometry Part 2",0],["maths","Trigonometry","Lecture 3: Trigonometry Part 3",0],["maths","Trigonometry","Lecture 4: Trigonometry Part 4",0],["maths","Trigonometry","Lecture 5: Trigonometry Part 5",0],["maths","Trigonometry","Lecture 6: Trigonometry Part 6",0],["maths","Number System and Complex Numbers","Lecture 1: Number System and Complex Numbers Part 1",0],["maths","Number System and Complex Numbers","Lecture 2: Number System and Complex Numbers Part 2",0],["maths","Number System and Complex Numbers","Lecture 3: Number System and Complex Numbers Part 3",0],["maths","Quadratic Equations","Lecture 1: Quadratic Equations Part 1",0],["maths","Quadratic Equations","Lecture 2: Quadratic Equations Part 2",0],["maths","Sequence and Series","Lecture 1: Sequence and Series Part 1",0],["maths","Sequence and Series","Lecture 2: Sequence and Series Part 2",0],["maths","Sequence and Series","Lecture 3: Sequence and Series Part 3",0],["maths","Sequence and Series","Lecture 4: Sequence and Series Part 4",0],["maths","Sequence and Series","Lecture 5: Sequence and Series Part 5",0],["maths","Sequence and Series","Lecture 6: Sequence and Series Part 6",0],["maths","Permutations","Lecture 1: Permutations Part 1",0],["maths","Permutations","Lecture 2: Permutations Part 2",0],["maths","Combinations","Lecture 1: Combinations Part 1",0],["maths","Combinations","Lecture 2: Combinations Part 2",0],["maths","Probability","Lecture 1: Probability Part 1",0],["maths","Probability","Lecture 2: Probability Part 2",0],["maths","Probability","Lecture 3: Probability Part 3",0],["maths","Mathematical Induction & Binomial Theorem","Lecture 1: Mathematical Induction & Binomial Theorem Part 1",0],["maths","Mathematical Induction & Binomial Theorem","Lecture 2: Mathematical Induction & Binomial Theorem Part 2",0],["maths","Mathematical Induction & Binomial Theorem","Lecture 3: Mathematical Induction & Binomial Theorem Part 3",0],["maths","Mathematical Induction & Binomial Theorem","Lecture 4: Mathematical Induction & Binomial Theorem Part 4",0],["maths","Matrices and Determinants","Lecture 1: Matrices and Determinants Part 1",0],["maths","Matrices and Determinants","Lecture 2: Matrices and Determinants Part 2",0],["maths","Matrices and Determinants","Lecture 3: Matrices and Determinants Part 3",0],["maths","Matrices and Determinants","Lecture 4: Matrices and Determinants Part 4",0],["maths","Set Theory","Lecture 1: Set Theory Part 1",0],["maths","Set Theory","Lecture 2: Set Theory Part 2",0],["maths","Group Theory","Lecture 1: Group Theory Part 1",0],["maths","Vector","Lecture 1: Vector Part 1",0],["maths","Logarithm Function | Inequalities","Lecture 1: Logarithm Function | Inequalities Part 1",0],["maths","Linear Programming | Area of Shaded Region","Lecture 1: Linear Programming | Area of Shaded Region Part 1",0],["physics","Projectile Motion (2D Motion)","Lecture 3: Projectile Motion (2D Motion) Part 3",1],["physics","Heat & Thermodynamics","Lecture 9: Heat & Thermodynamics Part 9",1],["physics","Heat & Thermodynamics","Lecture 10: Heat & Thermodynamics Part 10",1],["physics","Kinematics (Motion in 1D)","Lecture 4: Kinematics (Motion in 1D) Part 4",1],["physics","Modern Physics","Lecture 4: Modern Physics Part 4",0],["physics","Heat & Thermodynamics","Lecture 11: Heat & Thermodynamics Part 11",0],["physics","Oscillations (SHM)","Lecture 5: Oscillations (SHM) Part 5",0]];
+const SPECIAL={'Electrostatics':[4,4],'Analytical Geometry':[11,7],'Conic Section':[9,6],'Heat & Thermodynamics':[5,2]};
+const KEY='nettracker.v3',PREV='nettracker.prev',$=s=>document.querySelector(s);
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const dstr=(d=new Date())=>d.toLocaleDateString('en-CA');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function build(rows,special){const d={schema:'net-tracker/v2',session:{id:uid('s'),name:'NET 1 Prep',created:dstr()},settings:{start:'2026-10-17',target:'2026-11-15'},subjects:{physics:{name:'Physics',teacher:'Bilal Zia'},maths:{name:'Maths',teacher:'Hashim Zia'}},chapters:[],lectures:[],sheets:[],log:{}},m={};
+ rows.forEach(r=>{const k=r[0]+'|'+r[1];if(!m[k]){m[k]={id:'c'+d.chapters.length,subject:r[0],name:r[1]};d.chapters.push(m[k])}d.lectures.push({id:uid('l'),chapterId:m[k].id,title:r[2],done:!!r[3],doneAt:null,notes:r[4]||''})});
+ d.chapters.forEach(c=>{const [t,n]=special[c.name]||[1,0];for(let i=1;i<=t;i++)d.sheets.push({id:uid('p'),chapterId:c.id,title:'Sheet '+i,done:i<=n,doneAt:null})});return d}
+function check(j){
+ if(j&&j.sessions&&j.active)j=j.sessions[j.active];
+ if(j&&Array.isArray(j.lectures)&&!j.chapters)j=build(j.lectures.map(l=>[l.subject,l.chapter,l.title,l.status==='Complete'||l.done,l.notes]),{});
+ const bad=()=>{throw new Error('bad')},A=Array.isArray,str=x=>typeof x==='string';
+ if(!j||!A(j.chapters)||!A(j.lectures)||!A(j.sheets)||!j.subjects||typeof j.subjects!=='object')bad();
+ const ids=new Set();
+ j.chapters.forEach(c=>{if(!str(c.id)||!str(c.name)||!j.subjects[c.subject])bad();ids.add(c.id)});
+ [...j.lectures,...j.sheets].forEach(x=>{if(!str(x.id)||!str(x.title)||!ids.has(x.chapterId)||typeof x.done!=='boolean')bad();x.doneAt=/^\d{4}-\d\d-\d\d$/.test(x.doneAt)?x.doneAt:null;x.notes=str(x.notes)?x.notes:''});
+ Object.values(j.subjects).forEach(s=>{if(!str(s.name))bad();s.teacher=str(s.teacher)?s.teacher:''});
+ j.settings=j.settings&&/^\d{4}-\d\d-\d\d$/.test(j.settings.start)&&/^\d{4}-\d\d-\d\d$/.test(j.settings.target)?j.settings:{start:'2026-10-17',target:'2026-11-15'};
+ j.session=j.session||{id:uid('s'),name:'NET 1 Prep',created:dstr()};j.schema='net-tracker/v2';
+ j.log=j.log&&typeof j.log==='object'?j.log:{};return j}
+let S;
+(function(){let r;try{r=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+ try{if(r&&r.data)S=check(r.data)}catch(e){}
+ if(!S)try{S=check(JSON.parse(localStorage.getItem('nettracker.v2')))}catch(e){}
+ if(!S)S=build(LEG,SPECIAL)})();
+let tab='today',q='',pend=false;const open=new Set();
+function save(quiet){try{localStorage.setItem(KEY,JSON.stringify({v:3,data:S}))}catch(e){}if(!quiet)$('#sv').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2400)}
+function confirmD(title,text,ok){return new Promise(res=>{const d=$('#dlg');$('#dT').textContent=title;$('#dP').textContent=text;$('#dOk').textContent=ok||'Confirm';$('#dOk').onclick=()=>{d.close();res(true)};$('#dNo').onclick=()=>{d.close();res(false)};d.oncancel=()=>res(false);d.showModal()})}
+const chOf=x=>S.chapters.find(c=>c.id===x.chapterId),subs=()=>Object.keys(S.subjects);
+function st(sub){const ids=S.chapters.filter(c=>!sub||c.subject===sub).map(c=>c.id),L=S.lectures.filter(x=>ids.includes(x.chapterId)),P=S.sheets.filter(x=>ids.includes(x.chapterId));return{l:L.length,ld:L.filter(x=>x.done).length,p:P.length,pd:P.filter(x=>x.done).length}}
+const pc=(a,b)=>b?Math.round(a/b*100):0;
+function days(){const t=new Date();t.setHours(0,0,0,0);const a=new Date(S.settings.start+'T00:00'),b=new Date(S.settings.target+'T00:00');return{left:Math.round((b-t)/864e5),total:Math.max(1,Math.round((b-a)/864e5)),gone:Math.max(0,Math.round((t-a)/864e5))}}
+function lt(l){const c=chOf(l),m=l.title.match(/^Lecture\s*(\d+):\s*(.*)$/);let n=m?m[1]:'',r=m?m[2]:l.title;if(r.startsWith(c.name)&&r.length>c.name.length)r=r.slice(c.name.length).trim();return{n,r,c}}
+const fmt=d=>new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+const chev='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+function blocks(done,target,cls){const n=Math.min(40,Math.max(done,target));let h='';for(let i=0;i<n;i++)h+=`<i class="${i<done?(i>=target?'x':'f'):''}" style="transition-delay:${i*45}ms"></i>`;return`<div class="blocks ${cls||''}">${h||'<i></i>'}</div>`}
+function taskL(l){const t=lt(l);return`<label class="task ${l.done?'k':''}"><input type="checkbox" class="cb" data-l="${esc(l.id)}" ${l.done?'checked':''}><div class="tx"><b>${esc(t.c.name)}</b><small>Lecture ${esc(t.n)} ${esc(t.r)}</small></div><span class="tag ${t.c.subject==='physics'?'ph':'ma'}">${esc(S.subjects[t.c.subject].name)}</span></label>`}
+function taskP(p){const c=chOf(p);return`<label class="task ${p.done?'k':''}"><input type="checkbox" class="cb y" data-p="${esc(p.id)}" ${p.done?'checked':''}><div class="tx"><b>${esc(c.name)}</b><small>${esc(p.title)}</small></div><span class="tag sh">Practice</span></label>`}
+function today(){
+ const t=dstr(),dd=days(),N=Math.max(1,dd.left+1);
+ const dl=S.lectures.filter(x=>x.doneAt===t&&x.done),dp=S.sheets.filter(x=>x.doneAt===t&&x.done);
+ const rl=S.lectures.filter(x=>!x.done).length,rp=S.sheets.filter(x=>!x.done).length;
+ let g=S.log[t];if(!g){g=S.log[t]={tl:Math.ceil((rl+dl.length)/N),tp:Math.ceil((rp+dp.length)/N)};save(true)}
+ const nl=Math.max(0,g.tl-dl.length),np=Math.max(0,g.tp-dp.length),met=!nl&&!np;
+ const qs=subs().map(k=>S.lectures.filter(l=>!l.done&&chOf(l).subject===k));
+ const showL=nl||Math.min(2,rl),pickL=[];for(let i=0;pickL.length<showL&&qs.some(a=>a.length);i++){const a=qs[i%qs.length];if(a.length)pickL.push(a.shift())}
+ const hasL=new Set(S.lectures.filter(l=>l.done).map(l=>l.chapterId));
+ const pq=S.sheets.filter(p=>!p.done).sort((a,b)=>(hasL.has(b.chapterId)?1:0)-(hasL.has(a.chapterId)?1:0));
+ const pickP=pq.slice(0,np||Math.min(1,pq.length));
+ const listL=[...dl,...pickL].sort((a,b)=>S.lectures.indexOf(a)-S.lectures.indexOf(b)),listP=[...dp,...pickP].sort((a,b)=>S.sheets.indexOf(a)-S.sheets.indexOf(b));
+ const head=met?'Today’s target is done.':'Do '+[nl?plural(nl,'lecture'):'',np?plural(np,'sheet'):''].filter(Boolean).join(' and ')+' to stay on pace.';
+ const sub=met?'Anything extra puts you ahead of schedule.':dl.length+dp.length?'You’ve already finished '+(dl.length+dp.length)+' today. Keep going.':'Nothing ticked off yet today.';
+ let wk='';for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dstr(d),a=S.lectures.filter(x=>x.doneAt===k&&x.done).length,b=S.sheets.filter(x=>x.doneAt===k&&x.done).length,l=S.log[k],hit=l&&a>=l.tl&&b>=l.tp&&(l.tl+l.tp)>0;wk+=`<div class="day ${hit?'m':a+b?'p':''} ${i===0?'t':''}" title="${k}: ${a} lectures, ${b} sheets"><i></i>${d.toLocaleDateString('en-GB',{weekday:'narrow'})}</div>`}
+ return`<section class="hero"><h1 class="d">${head}</h1><p>${sub}</p>
+ <div class="pace"><div class="meter"><div class="top"><b class="d">${dl.length}<small> / ${g.tl}</small></b><span>Lectures today</span></div>${blocks(dl.length,g.tl)}</div>
+ <div class="meter"><div class="top"><b class="d">${dp.length}<small> / ${g.tp}</small></b><span>Practice sheets today</span></div>${blocks(dp.length,g.tp,'y')}</div></div>
+ <div class="week"><div class="lab">Last 7 days<br><span style="color:var(--dim);font-size:12px">Green means you hit the target</span></div>${wk}</div></section>
+ <section class="sec"><h2>${met?'Get ahead (optional)':'Suggested lectures'}</h2>${listL.map(taskL).join('')||'<div class="empty">All lectures are done.</div>'}</section>
+ <section class="sec"><h2>${met?'Extra practice':'Suggested practice sheets'}</h2>${listP.map(taskP).join('')||'<div class="empty">All sheets are done.</div>'}</section>`}
+function overview(){const a=st(),dd=days(),tot=a.l+a.p,done=a.ld+a.pd,ov=pc(done,tot),N=Math.max(1,dd.left+1);
+ const bar=(d,n,cls)=>`<div class="pr"><div class="bar ${cls||''}"><i style="width:${pc(d,n)}%"></i></div><b class="d">${pc(d,n)}%</b></div>`;
+ const sb=subs().map(k=>{const s=st(k);return`<div><div class="row"><b class="d" style="font-size:20px">${esc(S.subjects[k].name)}</b><span style="color:var(--mut);font-size:13px">${esc(S.subjects[k].teacher)}</span></div>
+ <div class="prog"><div class="row"><span>Lectures</span><span>${s.ld} / ${s.l}</span></div>${bar(s.ld,s.l)}</div>
+ <div class="prog"><div class="row"><span>Practice sheets</span><span>${s.pd} / ${s.p}</span></div>${bar(s.pd,s.p,'y')}</div></div>`}).join('');
+ return`<section class="hero"><h1 class="d">${Math.max(0,dd.left)} days to go.</h1><p>Target finish ${fmt(S.settings.target)}.</p>
+ <div class="prog" style="margin-top:22px">${bar(done,tot)}</div></section>
+ <section class="sec"><div class="stats"><div class="stat"><b class="d">${a.ld}<small style="font-size:20px;color:var(--dim)">/${a.l}</small></b><span>Lectures watched</span></div><div class="stat"><b class="d" style="color:var(--ye)">${a.pd}<small style="font-size:20px;color:var(--dim)">/${a.p}</small></b><span>Sheets finished</span></div>
+ <div class="stat"><b class="d">${((a.l-a.ld)/N).toFixed(1)}</b><span>Lectures per day needed</span></div><div class="stat"><b class="d" style="color:var(--ye)">${((a.p-a.pd)/N).toFixed(1)}</b><span>Sheets per day needed</span></div></div></section>
+ <section class="sec cols">${sb}</section>`}
+function chapters(sub){const ql=q.toLowerCase();let h='';
+ S.chapters.filter(c=>c.subject===sub).forEach(c=>{const L=S.lectures.filter(x=>x.chapterId===c.id),P=S.sheets.filter(x=>x.chapterId===c.id),ld=L.filter(x=>x.done).length,pd=P.filter(x=>x.done).length,full=ld===L.length&&pd===P.length;
+ if(ql&&!(c.name.toLowerCase().includes(ql)||L.some(l=>l.title.toLowerCase().includes(ql))))return;if(pend&&full)return;
+ const sh=pend?L.filter(x=>!x.done):L;
+ h+=`<details data-c="${esc(c.id)}" ${open.has(c.id)||ql?'open':''}><summary><b>${esc(c.name)}${full?'<span class="ok">Complete</span>':''}</b><span class="m"><span>${ld}/${L.length} lectures</span><em>${pd}/${P.length} sheets</em>${chev}</span><div class="bar"><i style="width:${pc(ld+pd,L.length+P.length)}%"></i></div></summary><div class="chs">${sh.map(taskL).join('')||'<div class="empty">No pending lectures.</div>'}
+ <div class="sh">${P.map(p=>`<button class="chip ${p.done?'d':''}" data-p="${esc(p.id)}" title="${esc(p.title)}">${p.done?'✓ ':''}S${esc(p.title.replace('Sheet ',''))}</button>`).join('')}<button class="mini" data-add="${esc(c.id)}" title="Add a sheet">+</button><button class="mini" data-rm="${esc(c.id)}" title="Remove last sheet">−</button><button class="btn txt" data-all="${esc(c.id)}" style="margin-left:auto">Mark chapter done</button></div></div></details>`});
+ return`<div class="fb"><input type="search" id="q" placeholder="Search chapters or lectures" value="${esc(q)}"><button class="btn ${pend?'on':''}" id="pend">Pending only</button></div>`+(h||'<div class="empty">No matching chapters.</div>')}
+function render(){const keep=document.activeElement&&document.activeElement.id==='q';
+ $('#sub').textContent=fmt(S.settings.start)+' to '+fmt(S.settings.target);
+ $('#nav').innerHTML=[['today','Today'],['overview','Overview'],...subs().map(k=>[k,S.subjects[k].name])].map(t=>`<button class="${tab===t[0]?'on':''}" data-t="${esc(t[0])}">${esc(t[1])}</button>`).join('');
+ $('#main').innerHTML=tab==='today'?today():tab==='overview'?overview():chapters(tab);
+ try{$('#bUndo').hidden=!localStorage.getItem(PREV)}catch(e){}
+ if(keep){const i=$('#q');i.focus();i.setSelectionRange(99,99)}}
+$('#nav').onclick=e=>{const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;render()}};
+$('#main').addEventListener('toggle',e=>{const c=e.target.dataset&&e.target.dataset.c;if(c)e.target.open?open.add(c):open.delete(c)},true);
+$('#main').onchange=e=>{const t=e.target;if(t.dataset.l){const l=S.lectures.find(x=>x.id===t.dataset.l);l.done=t.checked;l.doneAt=t.checked?dstr():null;t.closest('.task').classList.toggle('k',t.checked);save();setTimeout(render,450)}
+ else if(t.dataset.p){const p=S.sheets.find(x=>x.id===t.dataset.p);p.done=t.checked;p.doneAt=t.checked?dstr():null;t.closest('.task').classList.toggle('k',t.checked);save();setTimeout(render,450)}};
+$('#main').oninput=e=>{if(e.target.id==='q'){q=e.target.value;render()}};
+$('#main').onclick=e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.go){const g=t.dataset.go.split('|');tab=g[0];open.add(g[1]);render();const el=document.querySelector('[data-c="'+g[1]+'"]');if(el)el.scrollIntoView({block:'center'});return}
+ if(t.id==='pend'){pend=!pend;render()}
+ else if(t.dataset.p){const p=S.sheets.find(x=>x.id===t.dataset.p);p.done=!p.done;p.doneAt=p.done?dstr():null;t.classList.toggle('d',p.done);save();setTimeout(render,300)}
+ else if(t.dataset.add){const n=S.sheets.filter(x=>x.chapterId===t.dataset.add).length;S.sheets.push({id:uid('p'),chapterId:t.dataset.add,title:'Sheet '+(n+1),done:false,doneAt:null,notes:''});open.add(t.dataset.add);save();render()}
+ else if(t.dataset.rm){const a=S.sheets.filter(x=>x.chapterId===t.dataset.rm);if(a.length>1){S.sheets.splice(S.sheets.indexOf(a[a.length-1]),1);save();render()}}
+ else if(t.dataset.all){const c=t.dataset.all;[...S.lectures,...S.sheets].filter(x=>x.chapterId===c&&!x.done).forEach(x=>{x.done=true;x.doneAt=dstr()});open.add(c);save();render();toast('Chapter marked done')}};
+$('#bExp').onclick=async()=>{const json=JSON.stringify(S,null,2),fn='net-tracker-'+dstr()+'.json';
+ try{const dl=window.claude&&await claude.use('downloads');if(dl){await dl.save({filename:fn,data:new Blob([json],{type:'application/json'})});return}}catch(e){if(e&&e.code==='declined')return}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=fn;a.click()}catch(e){}
+ try{await navigator.clipboard.writeText(json);toast('Backup copied to clipboard')}catch(e){}};
+$('#bImp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;let d;
+ try{d=check(JSON.parse(await f.text()))}catch(x){return toast('That file isn’t a valid tracker backup. Nothing was changed.')}
+ const n=d.lectures.length,nd=d.lectures.filter(x=>x.done).length,p=d.sheets.length,pd=d.sheets.filter(x=>x.done).length;
+ if(!await confirmD('Replace your current progress?',`This file has ${nd}/${n} lectures and ${pd}/${p} sheets done. Your current data is backed up first, so you can use “Undo import”.`,'Replace'))return;
+ try{localStorage.setItem(PREV,JSON.stringify(S))}catch(x){}S=d;save();render();toast('Import complete')};
+$('#bUndo').onclick=async()=>{try{const d=check(JSON.parse(localStorage.getItem(PREV)));S=d;localStorage.removeItem(PREV);save();render();toast('Restored previous data')}catch(x){toast('Nothing to restore')}};
+render();
+</script></body></html>
