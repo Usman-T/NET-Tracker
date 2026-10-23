@@ -154,7 +154,7 @@ function overview(){const a=st(),dd=days(),tot=a.l+a.p,done=a.ld+a.pd,ov=pc(done
  <div class="prog"><div class="row"><span>Lectures</span><span>${s.ld} / ${s.l}</span></div>${bar(s.ld,s.l)}</div>
  <div class="prog"><div class="row"><span>Practice sheets</span><span>${s.pd} / ${s.p}</span></div>${bar(s.pd,s.p,'y')}</div></div>`}).join('');
  return`<section class="hero"><h1 class="d">${Math.max(0,dd.left)} days to go.</h1><p>Target finish ${fmt(S.settings.target)}.</p>
- <div class="prog" style="margin-top:22px">${bar(done,tot)}</div></section>
+ <div class="prog" style="margin-top:24px"><div class="row"><span>Overall</span><span>${done} / ${tot}</span></div>${bar(done,tot)}</div><div class="prog"><div class="row"><span>Lectures</span><span>${a.ld} / ${a.l}</span></div>${bar(a.ld,a.l)}</div><div class="prog"><div class="row"><span>Practice sheets</span><span>${a.pd} / ${a.p}</span></div>${bar(a.pd,a.p,'y')}</div></section>
  <section class="sec"><div class="stats"><div class="stat"><b class="d">${a.ld}<small style="font-size:20px;color:var(--dim)">/${a.l}</small></b><span>Lectures watched</span></div><div class="stat"><b class="d" style="color:var(--ye)">${a.pd}<small style="font-size:20px;color:var(--dim)">/${a.p}</small></b><span>Sheets finished</span></div>
  <div class="stat"><b class="d">${((a.l-a.ld)/N).toFixed(1)}</b><span>Lectures per day needed</span></div><div class="stat"><b class="d" style="color:var(--ye)">${((a.p-a.pd)/N).toFixed(1)}</b><span>Sheets per day needed</span></div></div></section>
  <section class="sec cols">${sb}</section>`}
