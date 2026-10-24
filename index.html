@@ -73,13 +73,14 @@ dialog h3{margin:0 0 8px;font-size:19px}dialog p{margin:0 0 18px;color:var(--mut
 .sub{margin-top:26px}.map{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:12px}.cl{display:flex;flex-wrap:wrap;gap:3px;max-width:104px;background:none;border:0;padding:5px;border-radius:8px;transition:background .2s}.cl:hover{background:var(--s2)}
 .cl i{width:10px;height:10px;border-radius:3px;background:var(--ln)}.cl i.f{background:var(--or)}.cl i.s{border-radius:50%;background:none;box-shadow:inset 0 0 0 1.5px var(--ln2)}.cl i.s.f{background:var(--ye);box-shadow:none}
 .pr{display:flex;align-items:center;gap:12px}.pr .bar{flex:1;margin:0;height:8px}.pr b{min-width:44px;text-align:right;font-size:15px;font-weight:700}
+.ib{background:none;border:0;color:var(--dim);font-size:17px;width:30px;height:30px;border-radius:8px;flex:none;line-height:1}.ib:hover{background:var(--s2);color:var(--or)}
 </style></head><body><div class="wrap">
 <header><div class="brand"><b class="d">NET<i>1</i> prep</b><span id="sub"></span></div>
 <div class="act"><span class="sv" id="sv"></span><button class="btn txt" id="bUndo" hidden>Undo import</button>
 <button class="btn" id="bImp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L7 8m5-5 5 5M4 17v3h16v-3"/></svg>Import</button>
 <button class="btn pri" id="bExp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg>Export</button></div></header>
 <nav id="nav"></nav><main id="main"></main></div>
-<dialog id="dlg"><h3 id="dT"></h3><p id="dP"></p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="dNo">Cancel</button><button class="btn pri" id="dOk">Confirm</button></div></dialog>
+<dialog id="dlg"><h3 id="dT"></h3><p id="dP"></p><input id="dI" hidden style="width:100%;margin:0 0 18px;background:var(--bg);border:1px solid var(--ln2);border-radius:10px;padding:9px 12px;outline:0"><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="dNo">Cancel</button><button class="btn pri" id="dOk">Confirm</button></div></dialog>
 <input type="file" id="file" accept=".json,application/json" hidden><div class="toast" id="toast"></div>
 <script>
 /* SCHEMA net-tracker/v2 (additive: log)
@@ -115,6 +116,7 @@ let S;
 let tab='today',q='',pend=false;const open=new Set();
 function save(quiet){try{localStorage.setItem(KEY,JSON.stringify({v:3,data:S}))}catch(e){}if(!quiet)$('#sv').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2400)}
+function askText(title,val,ok){return new Promise(res=>{const d=$('#dlg'),i=$('#dI');$('#dT').textContent=title;$('#dP').textContent='';i.hidden=false;i.value=val;$('#dOk').textContent=ok;const fin=v=>{i.hidden=true;d.close();res(v)};i.onkeydown=e=>{if(e.key==='Enter')$('#dOk').click()};$('#dOk').onclick=()=>fin(i.value.trim()||null);$('#dNo').onclick=()=>fin(null);d.oncancel=()=>{i.hidden=true;res(null)};d.showModal();i.focus();i.select()})}
 function confirmD(title,text,ok){return new Promise(res=>{const d=$('#dlg');$('#dT').textContent=title;$('#dP').textContent=text;$('#dOk').textContent=ok||'Confirm';$('#dOk').onclick=()=>{d.close();res(true)};$('#dNo').onclick=()=>{d.close();res(false)};d.oncancel=()=>res(false);d.showModal()})}
 const chOf=x=>S.chapters.find(c=>c.id===x.chapterId),subs=()=>Object.keys(S.subjects);
 function st(sub){const ids=S.chapters.filter(c=>!sub||c.subject===sub).map(c=>c.id),L=S.lectures.filter(x=>ids.includes(x.chapterId)),P=S.sheets.filter(x=>ids.includes(x.chapterId));return{l:L.length,ld:L.filter(x=>x.done).length,p:P.length,pd:P.filter(x=>x.done).length}}
@@ -125,7 +127,7 @@ const fmt=d=>new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',mont
 const plural=(n,w)=>n+' '+w+(n===1?'':'s');
 const chev='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 function blocks(done,target,cls){const n=Math.min(40,Math.max(done,target));let h='';for(let i=0;i<n;i++)h+=`<i class="${i<done?(i>=target?'x':'f'):''}" style="transition-delay:${i*45}ms"></i>`;return`<div class="blocks ${cls||''}">${h||'<i></i>'}</div>`}
-function taskL(l){const t=lt(l);return`<label class="task ${l.done?'k':''}"><input type="checkbox" class="cb" data-l="${esc(l.id)}" ${l.done?'checked':''}><div class="tx"><b>${esc(t.c.name)}</b><small>Lecture ${esc(t.n)} ${esc(t.r)}</small></div><span class="tag ${t.c.subject==='physics'?'ph':'ma'}">${esc(S.subjects[t.c.subject].name)}</span></label>`}
+function taskL(l,ed){const t=lt(l);return`<label class="task ${l.done?'k':''}"><input type="checkbox" class="cb" data-l="${esc(l.id)}" ${l.done?'checked':''}><div class="tx"><b>${esc(t.c.name)}</b><small>${t.n?'Lecture '+esc(t.n)+' ':''}${esc(t.r)}</small></div><span class="tag ${t.c.subject==='physics'?'ph':'ma'}">${esc(S.subjects[t.c.subject].name)}</span>${ed?'<button class="ib" data-ren="'+esc(l.id)+'" title="Rename">✎</button><button class="ib" data-del="'+esc(l.id)+'" title="Remove">×</button>':''}</label>`}
 function taskP(p){const c=chOf(p);return`<label class="task ${p.done?'k':''}"><input type="checkbox" class="cb y" data-p="${esc(p.id)}" ${p.done?'checked':''}><div class="tx"><b>${esc(c.name)}</b><small>${esc(p.title)}</small></div><span class="tag sh">Practice</span></label>`}
 function today(){
  const t=dstr(),dd=days(),N=Math.max(1,dd.left+1);
@@ -146,7 +148,7 @@ function today(){
  <div class="pace"><div class="meter"><div class="top"><b class="d">${dl.length}<small> / ${g.tl}</small></b><span>Lectures today</span></div>${blocks(dl.length,g.tl)}</div>
  <div class="meter"><div class="top"><b class="d">${dp.length}<small> / ${g.tp}</small></b><span>Practice sheets today</span></div>${blocks(dp.length,g.tp,'y')}</div></div>
  <div class="week"><div class="lab">Last 7 days<br><span style="color:var(--dim);font-size:12px">Green means you hit the target</span></div>${wk}</div></section>
- <section class="sec"><h2>${met?'Get ahead (optional)':'Suggested lectures'}</h2>${listL.map(taskL).join('')||'<div class="empty">All lectures are done.</div>'}</section>
+ <section class="sec"><h2>${met?'Get ahead (optional)':'Suggested lectures'}</h2>${listL.map(l=>taskL(l)).join('')||'<div class="empty">All lectures are done.</div>'}</section>
  <section class="sec"><h2>${met?'Extra practice':'Suggested practice sheets'}</h2>${listP.map(taskP).join('')||'<div class="empty">All sheets are done.</div>'}</section>`}
 function overview(){const a=st(),dd=days(),tot=a.l+a.p,done=a.ld+a.pd,ov=pc(done,tot),N=Math.max(1,dd.left+1);
  const bar=(d,n,cls)=>`<div class="pr"><div class="bar ${cls||''}"><i style="width:${pc(d,n)}%"></i></div><b class="d">${pc(d,n)}%</b></div>`;
@@ -162,8 +164,8 @@ function chapters(sub){const ql=q.toLowerCase();let h='';
  S.chapters.filter(c=>c.subject===sub).forEach(c=>{const L=S.lectures.filter(x=>x.chapterId===c.id),P=S.sheets.filter(x=>x.chapterId===c.id),ld=L.filter(x=>x.done).length,pd=P.filter(x=>x.done).length,full=ld===L.length&&pd===P.length;
  if(ql&&!(c.name.toLowerCase().includes(ql)||L.some(l=>l.title.toLowerCase().includes(ql))))return;if(pend&&full)return;
  const sh=pend?L.filter(x=>!x.done):L;
- h+=`<details data-c="${esc(c.id)}" ${open.has(c.id)||ql?'open':''}><summary><b>${esc(c.name)}${full?'<span class="ok">Complete</span>':''}</b><span class="m"><span>${ld}/${L.length} lectures</span><em>${pd}/${P.length} sheets</em>${chev}</span><div class="bar"><i style="width:${pc(ld+pd,L.length+P.length)}%"></i></div></summary><div class="chs">${sh.map(taskL).join('')||'<div class="empty">No pending lectures.</div>'}
- <div class="sh">${P.map(p=>`<button class="chip ${p.done?'d':''}" data-p="${esc(p.id)}" title="${esc(p.title)}">${p.done?'✓ ':''}S${esc(p.title.replace('Sheet ',''))}</button>`).join('')}<button class="mini" data-add="${esc(c.id)}" title="Add a sheet">+</button><button class="mini" data-rm="${esc(c.id)}" title="Remove last sheet">−</button><button class="btn txt" data-all="${esc(c.id)}" style="margin-left:auto">Mark chapter done</button></div></div></details>`});
+ h+=`<details data-c="${esc(c.id)}" ${open.has(c.id)||ql?'open':''}><summary><b>${esc(c.name)}${full?'<span class="ok">Complete</span>':''}</b><span class="m"><span>${ld}/${L.length} lectures</span><em>${pd}/${P.length} sheets</em>${chev}</span><div class="bar"><i style="width:${pc(ld+pd,L.length+P.length)}%"></i></div></summary><div class="chs">${sh.map(l=>taskL(l,true)).join('')||'<div class="empty">No pending lectures.</div>'}
+ <div style="margin:12px 0 0"><button class="btn" data-addl="${esc(c.id)}">+ Add lecture</button></div><div class="sh">${P.map(p=>`<button class="chip ${p.done?'d':''}" data-p="${esc(p.id)}" title="${esc(p.title)}">${p.done?'✓ ':''}S${esc(p.title.replace('Sheet ',''))}</button>`).join('')}<button class="mini" data-add="${esc(c.id)}" title="Add a sheet">+</button><button class="mini" data-rm="${esc(c.id)}" title="Remove last sheet">−</button><button class="btn txt" data-all="${esc(c.id)}" style="margin-left:auto">Mark chapter done</button></div></div></details>`});
  return`<div class="fb"><input type="search" id="q" placeholder="Search chapters or lectures" value="${esc(q)}"><button class="btn ${pend?'on':''}" id="pend">Pending only</button></div>`+(h||'<div class="empty">No matching chapters.</div>')}
 function render(){const keep=document.activeElement&&document.activeElement.id==='q';
  $('#sub').textContent=fmt(S.settings.start)+' to '+fmt(S.settings.target);
@@ -176,8 +178,11 @@ $('#main').addEventListener('toggle',e=>{const c=e.target.dataset&&e.target.data
 $('#main').onchange=e=>{const t=e.target;if(t.dataset.l){const l=S.lectures.find(x=>x.id===t.dataset.l);l.done=t.checked;l.doneAt=t.checked?dstr():null;t.closest('.task').classList.toggle('k',t.checked);save();setTimeout(render,450)}
  else if(t.dataset.p){const p=S.sheets.find(x=>x.id===t.dataset.p);p.done=t.checked;p.doneAt=t.checked?dstr():null;t.closest('.task').classList.toggle('k',t.checked);save();setTimeout(render,450)}};
 $('#main').oninput=e=>{if(e.target.id==='q'){q=e.target.value;render()}};
-$('#main').onclick=e=>{const t=e.target.closest('button');if(!t)return;
+$('#main').onclick=async e=>{const t=e.target.closest('button');if(!t)return;
  if(t.dataset.go){const g=t.dataset.go.split('|');tab=g[0];open.add(g[1]);render();const el=document.querySelector('[data-c="'+g[1]+'"]');if(el)el.scrollIntoView({block:'center'});return}
+ if(t.dataset.addl){const c=S.chapters.find(x=>x.id===t.dataset.addl),n=S.lectures.filter(x=>x.chapterId===c.id).length+1;const nm=await askText('Add lecture','Lecture '+n+': '+c.name+' Part '+n,'Add');if(!nm)return;S.lectures.splice(S.lectures.map(x=>x.chapterId).lastIndexOf(c.id)+1,0,{id:uid('l'),chapterId:c.id,title:nm,done:false,doneAt:null,notes:''});open.add(c.id);save();render();return}
+ if(t.dataset.ren){const l=S.lectures.find(x=>x.id===t.dataset.ren),nm=await askText('Rename lecture',l.title,'Save');if(nm){l.title=nm;save();render()}return}
+ if(t.dataset.del){const l=S.lectures.find(x=>x.id===t.dataset.del);if(await confirmD('Remove this lecture?',l.title,'Remove')){S.lectures.splice(S.lectures.indexOf(l),1);save();render()}return}
  if(t.id==='pend'){pend=!pend;render()}
  else if(t.dataset.p){const p=S.sheets.find(x=>x.id===t.dataset.p);p.done=!p.done;p.doneAt=p.done?dstr():null;t.classList.toggle('d',p.done);save();setTimeout(render,300)}
  else if(t.dataset.add){const n=S.sheets.filter(x=>x.chapterId===t.dataset.add).length;S.sheets.push({id:uid('p'),chapterId:t.dataset.add,title:'Sheet '+(n+1),done:false,doneAt:null,notes:''});open.add(t.dataset.add);save();render()}
